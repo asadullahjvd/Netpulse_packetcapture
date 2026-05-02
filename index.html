@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetPulse | Network Monitoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <i data-lucide="activity" size="32" color="#6366f1"></i>
+                <h1>NetPulse</h1>
+                <div class="status-indicator">
+                    <div id="status-dot" class="status-dot"></div>
+                    <span id="status-text">Disconnected</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="start-btn" class="btn btn-primary">
+                    <i data-lucide="play" size="16"></i> Start Capture
+                </button>
+                <button id="stop-btn" class="btn btn-danger" disabled>
+                    <i data-lucide="square" size="16"></i> Stop
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label"><i data-lucide="layers" size="14"></i> Total Packets</div>
+                    <div id="stat-total" class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i data-lucide="cpu" size="14"></i> TCP</div>
+                    <div id="stat-tcp" class="stat-value" style="color: #818cf8">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i data-lucide="zap" size="14"></i> UDP</div>
+                    <div id="stat-udp" class="stat-value" style="color: #22d3ee">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i data-lucide="alert-circle" size="14"></i> ICMP</div>
+                    <div id="stat-icmp" class="stat-value" style="color: #fb7185">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i data-lucide="bar-chart-2" size="14"></i> Avg Size</div>
+                    <div id="stat-avg-size" class="stat-value">0 B</div>
+                </div>
+            </div>
+
+            <div class="card filter-card">
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label>PROTOCOL</label>
+                        <select id="filter-protocol" class="form-input">
+                            <option value="ALL">All Protocols</option>
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="ICMP">ICMP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>SOURCE IP</label>
+                        <input type="text" id="filter-src-ip" class="form-input" placeholder="0.0.0.0">
+                    </div>
+                    <div class="form-group">
+                        <label>DESTINATION IP</label>
+                        <input type="text" id="filter-dst-ip" class="form-input" placeholder="0.0.0.0">
+                    </div>
+                    <div class="controls">
+                        <button id="apply-filter-btn" class="btn btn-primary" style="flex: 1">Filter</button>
+                        <button id="reset-filter-btn" class="btn btn-outline">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card data-card">
+                <div class="card-header">
+                    <h3 class="stat-label"><i data-lucide="list" size="14"></i> Live Network Logs</h3>
+                </div>
+                <div class="table-container">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>TIME</th>
+                                <th>SOURCE</th>
+                                <th>DESTINATION</th>
+                                <th>PROTO</th>
+                                <th>SIZE</th>
+                                <th>S-PORT</th>
+                                <th>D-PORT</th>
+                                <th>SERVICE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                                    Monitoring inactive. Start capture to see live data.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing <span id="view-mode">Live</span> data
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prev-btn" class="btn btn-outline btn-sm" disabled>
+                            <i data-lucide="chevron-left" size="14"></i> Previous 1000
+                        </button>
+                        <span id="page-indicator">Page 1</span>
+                        <button id="next-btn" class="btn btn-outline btn-sm" disabled>
+                            Next 1000 <i data-lucide="chevron-right" size="14"></i>
+                        </button>
+                        <button id="live-btn" class="btn btn-primary btn-sm" style="display: none;">
+                            <i data-lucide="refresh-cw" size="14"></i> Return to Live
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
