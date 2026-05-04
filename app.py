@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 import threading
 import time
 import csv
@@ -9,6 +9,7 @@ from scapy.all import sniff, IP, TCP, UDP, ICMP
 app = Flask(__name__)
 
 monitoring_active = False
+save_packets_enabled = False
 captured_packets = []
 sniffer_thread = None
 LOG_FILE = 'captured_traffic.csv'
@@ -73,7 +74,9 @@ def packet_callback(packet):
         }
         
         captured_packets.append(packet_info)
-        save_to_file(packet_info)
+        
+        if save_packets_enabled:
+            save_to_file(packet_info)
         
         if len(captured_packets) > 50000:
             captured_packets.pop(0)
@@ -87,19 +90,34 @@ def index():
 
 @app.route('/api/start', methods=['POST'])
 def start_monitoring():
-    global monitoring_active, captured_packets, sniffer_thread
+    global monitoring_active, captured_packets, sniffer_thread, save_packets_enabled
     if not monitoring_active:
         captured_packets = []
         
-        with open(LOG_FILE, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=LOG_FIELDNAMES)
-            writer.writeheader()
+        # Get save preference from request
+        data = request.get_json() or {}
+        save_packets_enabled = data.get('save_to_csv', False)
+        
+        if save_packets_enabled:
+            with open(LOG_FILE, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=LOG_FIELDNAMES)
+                writer.writeheader()
             
         monitoring_active = True
         sniffer_thread = threading.Thread(target=start_sniffing, daemon=True)
         sniffer_thread.start()
-        return jsonify({"status": "success", "message": "Live monitoring started"})
+        return jsonify({
+            "status": "success", 
+            "message": "Live monitoring started",
+            "saving": save_packets_enabled
+        })
     return jsonify({"status": "error", "message": "Monitoring already active"})
+
+@app.route('/api/download', methods=['GET'])
+def download_file():
+    if os.path.exists(LOG_FILE):
+        return send_file(LOG_FILE, as_attachment=True)
+    return jsonify({"status": "error", "message": "No capture file found"}), 404
 
 @app.route('/api/stop', methods=['POST'])
 def stop_monitoring():
