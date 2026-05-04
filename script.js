@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopBtn = document.getElementById('stop-btn');
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
+    const saveCsvCheckbox = document.getElementById('save-csv-checkbox');
+    const downloadBtn = document.getElementById('download-btn');
     
     const statTotal = document.getElementById('stat-total');
     const statTcp = document.getElementById('stat-tcp');
@@ -30,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastDataIds = "";
     let currentPage = 0;
     let maxPages = 1;
+    let sessionWasSaved = false;
 
     const checkStatusOnLoad = async () => {
         try {
@@ -168,13 +171,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startMonitoring = async () => {
         try {
-            const response = await fetch('/api/start', { method: 'POST' });
+            const saveToCSV = saveCsvCheckbox.checked;
+            const response = await fetch('/api/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ save_to_csv: saveToCSV })
+            });
             const data = await response.json();
             
             if (data.status === 'success') {
                 isMonitoring = true;
+                sessionWasSaved = data.saving || false;
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
+                saveCsvCheckbox.disabled = true;
+                downloadBtn.style.display = 'none';
                 statusDot.classList.add('active');
                 statusText.textContent = "Live Monitoring";
                 statusText.style.color = "var(--success)";
@@ -196,9 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
             isMonitoring = false;
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            saveCsvCheckbox.disabled = false;
             statusDot.classList.remove('active');
             statusText.textContent = "Stopped";
             statusText.style.color = "var(--text-muted)";
+            
+            if (sessionWasSaved) {
+                downloadBtn.style.display = 'inline-flex';
+            }
             
             if (pollInterval) {
                 clearInterval(pollInterval);
@@ -216,6 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     stopBtn.addEventListener('click', stopMonitoring);
+
+    downloadBtn.addEventListener('click', () => {
+        window.location.href = '/api/download';
+    });
     
     applyFilterBtn.addEventListener('click', applyFiltersAndRender);
     
